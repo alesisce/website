@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>alesis.buzz — Python Backend Engineer</title>
+  <meta name="description" content="Python Backend Engineer. Private infrastructure. Real systems. No vendor lock-in." />
+  <meta property="og:title" content="alesis.buzz — Python Backend Engineer" />
+  <meta property="og:description" content="Custom Python backend. Private VPS. Real projects." />
+  <meta property="og:type" content="website" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            mono: ['"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'monospace'],
+          },
+          colors: {
+            base:     '#0a0a0a',
+            surface:  '#0f0f0f',
+            raised:   '#141414',
+            border:   '#1c1c1c',
+            border2:  '#252525',
+            carbon:   '#2e2e2e',
+            dim:      '#4a4a4a',
+            muted:    '#666666',
+            soft:     '#999999',
+            bright:   '#d4d4d4',
+            white:    '#efefef',
+            pyblue:   '#4b8bbe',
+            pyblue2:  '#306998',
+            pyyellow: '#ffd43b',
+            pyyellow2:'#ffe873',
+            online:   '#3fb950',
+          },
+        }
+      }
+    }
+  </script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html {
+      scroll-behavior: smooth;
+      background: #0a0a0a;
+    }
+
+    body {
+      background: #0a0a0a;
+      color: #d4d4d4;
+      font-family: 'JetBrains Mono', ui-monospace, monospace;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      overflow-x: hidden;
+      line-height: 1.6;
+    }
+
+    /* ── Grain overlay ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23g)' opacity='0.045'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 9998;
+    }
+
+    /* ── Fine scanlines ── */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(
+        to bottom,
+        transparent 0px,
+        transparent 2px,
+        rgba(0,0,0,0.03) 2px,
+        rgba(0,0,0,0.03) 3px
+      );
+      pointer-events: none;
+      z-index: 9997;
+    }
+
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar       { width: 3px; }
+    ::-webkit-scrollbar-track { background: #0a0a0a; }
+    ::-webkit-scrollbar-thumb { background: #1c1c1c; }
+
+    ::selection { background: rgba(75,139,190,0.25); color: #ffd43b; }
+
+    /* ── Grid background ── */
+    .dot-grid {
+      background-image: radial-gradient(circle, #1c1c1c 1px, transparent 1px);
+      background-size: 28px 28px;
+    }
+
+    /* ── Cards ── */
+    .card {
+      background: #0f0f0f;
+      border: 1px solid #1c1c1c;
+      position: relative;
+      transition: border-color 0.25s ease, box-shadow 0.25s ease;
+    }
+    .card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(75,139,190,0.03) 0%, transparent 60%);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .card:hover { border-color: #2a3a4a; box-shadow: 0 0 30px rgba(75,139,190,0.06); }
+    .card:hover::before { opacity: 1; }
+
+    .card-yellow:hover { border-color: #3a3520; box-shadow: 0 0 30px rgba(255,212,59,0.05); }
+    .card-yellow:hover::before { background: linear-gradient(135deg, rgba(255,212,59,0.03) 0%, transparent 60%); }
+
+    /* ── Badges ── */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+      padding: 2px 8px;
+      border: 1px solid;
+      line-height: 1.6;
+    }
+    .badge-blue   { border-color: rgba(75,139,190,0.4);  color: #4b8bbe; background: rgba(75,139,190,0.06);  }
+    .badge-yellow { border-color: rgba(255,212,59,0.4);  color: #ffd43b; background: rgba(255,212,59,0.06); }
+    .badge-gray   { border-color: #252525;                color: #666;    background: rgba(255,255,255,0.02); }
+    .badge-green  { border-color: rgba(63,185,80,0.4);   color: #3fb950; background: rgba(63,185,80,0.06);  }
+
+    /* ── Terminal chrome ── */
+    .term-bar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 9px 13px;
+      border-bottom: 1px solid #1c1c1c;
+      background: #0d0d0d;
+    }
+    .td { width: 10px; height: 10px; border-radius: 50%; }
+    .td-r { background: #ff5f57; }
+    .td-y { background: #ffbd2e; }
+    .td-g { background: #28c840; }
+
+    /* ── Animations ── */
+    @keyframes blink   { 0%,100%{opacity:1} 50%{opacity:0} }
+    @keyframes fadeUp  { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes fadeIn  { from{opacity:0} to{opacity:1} }
+    @keyframes pulse   { 0%,100%{opacity:1} 50%{opacity:.4} }
+    @keyframes scanX   { from{transform:translateX(-100%)} to{transform:translateX(100%)} }
+    @keyframes drawLine{ from{stroke-dashoffset:300} to{stroke-dashoffset:0} }
+
+    .anim-fadeup  { animation: fadeUp 0.7s cubic-bezier(.16,1,.3,1) both; }
+    .anim-fadein  { animation: fadeIn 0.6s ease both; }
+    .d1 { animation-delay: 0.05s; }
+    .d2 { animation-delay: 0.12s; }
+    .d3 { animation-delay: 0.20s; }
+    .d4 { animation-delay: 0.28s; }
+    .d5 { animation-delay: 0.38s; }
+    .d6 { animation-delay: 0.48s; }
+
+    .cursor-blink::after {
+      content: '▋';
+      animation: blink 1s step-end infinite;
+      color: #ffd43b;
+      font-weight: 300;
+    }
+
+    .status-dot {
+      display: inline-block;
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: #3fb950;
+      box-shadow: 0 0 8px rgba(63,185,80,0.6);
+      animation: pulse 2.4s ease-in-out infinite;
+      flex-shrink: 0;
+    }
+
+    /* ── Progress bars ── */
+    .pbar { height: 3px; background: #1c1c1c; width: 100%; }
+    .pbar-fill { height: 100%; transition: width 1.4s cubic-bezier(.16,1,.3,1); }
+
+    /* ── Nav ── */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(10,10,10,0.88);
+      backdrop-filter: blur(14px) saturate(180%);
+      -webkit-backdrop-filter: blur(14px) saturate(180%);
+      border-bottom: 1px solid #1c1c1c;
+    }
+
+    /* ── Infra banner ── */
+    .infra-strip {
+      background: linear-gradient(90deg,
+        rgba(75,139,190,0.06) 0%,
+        rgba(255,212,59,0.05) 50%,
+        rgba(75,139,190,0.06) 100%
+      );
+      border-top: 1px solid rgba(75,139,190,0.2);
+      border-bottom: 1px solid rgba(75,139,190,0.2);
+      position: relative;
+      overflow: hidden;
+    }
+    .infra-strip::after {
+      content: '';
+      position: absolute;
+      top: 0; bottom: 0;
+      width: 40%;
+      background: linear-gradient(90deg, transparent, rgba(75,139,190,0.06), transparent);
+      animation: scanX 4s ease-in-out infinite;
+    }
+
+    /* ── Section heading ── */
+    .sec-head {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 2.5rem;
+    }
+    .sec-head span.num { color: #4b8bbe; font-size: 11px; font-weight: 600; letter-spacing: .12em; }
+    .sec-head h2 { color: #efefef; font-size: 13px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; }
+    .sec-head .line { flex: 1; height: 1px; background: #1c1c1c; }
+
+    /* ── Dashboard mock ── */
+    .dash-table { width: 100%; font-size: 10px; border-collapse: collapse; }
+    .dash-table td, .dash-table th { padding: 5px 8px; border: 1px solid #1c1c1c; }
+    .dash-table th { color: #4a4a4a; font-weight: 500; letter-spacing: .06em; background: #0d0d0d; }
+
+    /* ── Footer ── */
+    footer { border-top: 1px solid #1c1c1c; }
+
+    /* ── Link ── */
+    a { color: inherit; text-decoration: none; }
+    .link-blue { color: #4b8bbe; transition: color .2s; }
+    .link-blue:hover { color: #7ab0d4; }
+
+    /* ── Responsive ── */
+    @media (max-width: 640px) {
+      .hide-sm { display: none !important; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════
+     NAVIGATION
+════════════════════════════════════════ -->
+<nav>
+  <div style="max-width:1000px;margin:0 auto;padding:0 20px;height:48px;display:flex;align-items:center;justify-content:space-between;">
+
+    <!-- Logo -->
+    <a href="#" style="display:flex;align-items:center;gap:10px;">
+      <span style="font-size:14px;font-weight:600;color:#efefef;letter-spacing:-.01em;">
+        alesis<span style="color:#4b8bbe;">.</span>buzz
+      </span>
+    </a>
+
+    <!-- Nav links -->
+    <div style="display:flex;align-items:center;gap:24px;font-size:11px;color:#4a4a4a;letter-spacing:.06em;">
+      <a href="#projects" class="hide-sm" style="transition:color .2s;" onmouseover="this.style.color='#d4d4d4'" onmouseout="this.style.color='#4a4a4a'">projects</a>
+      <a href="#stack"    class="hide-sm" style="transition:color .2s;" onmouseover="this.style.color='#d4d4d4'" onmouseout="this.style.color='#4a4a4a'">client portal</a>
+      <a href="#contact"  class="hide-sm" style="transition:color .2s;" onmouseover="this.style.color='#d4d4d4'" onmouseout="this.style.color='#4a4a4a'">contact</a>
+      <a href="https://github.com/alesisce" target="_blank" rel="noopener"
+         style="display:flex;align-items:center;gap:7px;border:1px solid #1c1c1c;padding:6px 13px;color:#999;transition:all .2s;"
+         onmouseover="this.style.borderColor='#4b8bbe';this.style.color='#4b8bbe';"
+         onmouseout="this.style.borderColor='#1c1c1c';this.style.color='#999';">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.438 9.8 8.205 11.387.6.113.82-.258.82-.577v-2.165c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.84 1.237 1.84 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.605-2.665-.3-5.467-1.332-5.467-5.93 0-1.31.468-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.3 1.23A11.51 11.51 0 0 1 12 5.803c1.02.005 2.047.138 3.006.404 2.29-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.91 1.235 3.221 0 4.61-2.807 5.625-5.479 5.92.43.372.823 1.102.823 2.222v3.293c0 .322.218.694.825.576C20.565 21.796 24 17.298 24 12c0-6.63-5.37-12-12-12z"/></svg>
+        github
+      </a>
+    </div>
+  </div>
+</nav>
+
+<!-- ════════════════════════════════════════
+     HERO
+════════════════════════════════════════ -->
+<section class="dot-grid" style="position:relative;overflow:hidden;">
+  <!-- Ambient glow -->
+  <div style="position:absolute;top:-80px;right:-80px;width:500px;height:500px;background:radial-gradient(circle,rgba(75,139,190,0.05) 0%,transparent 70%);pointer-events:none;"></div>
+  <div style="position:absolute;bottom:-60px;left:-60px;width:400px;height:400px;background:radial-gradient(circle,rgba(255,212,59,0.03) 0%,transparent 70%);pointer-events:none;"></div>
+
+  <div style="max-width:1000px;margin:0 auto;padding:60px 20px 70px;">
+    <div style="max-width:660px;">
+
+      <!-- Terminal window -->
+      <div class="card anim-fadeup d1" style="margin-bottom:32px;">
+        <div class="term-bar">
+          <div class="td td-r"></div>
+          <div class="td td-y"></div>
+          <div class="td td-g"></div>
+          <span style="margin-left:10px;font-size:10px;color:#4a4a4a;letter-spacing:.04em;">bash — alesis@vps:~ — 80×24</span>
+          <div style="margin-left:auto;display:flex;align-items:center;gap:6px;">
+            <span class="status-dot"></span>
+            <span style="font-size:10px;color:#3fb950;">online</span>
+          </div>
+        </div>
+        <div style="padding:22px 24px;font-size:12px;line-height:1.8;">
+          <p style="color:#4a4a4a;margin-bottom:4px;">$ <span style="color:#666;">cat identity.txt</span></p>
+          <p style="margin-bottom:18px;">
+            <span style="color:#4b8bbe;font-weight:600;">name</span><span style="color:#555;"> = </span><span style="color:#ffd43b;">"Aleix"</span><br>
+            <span style="color:#4b8bbe;font-weight:600;">role</span><span style="color:#555;"> = </span><span style="color:#ffd43b;">"Python Backend Engineer"</span><br>
+            <span style="color:#4b8bbe;font-weight:600;">focus</span><span style="color:#555;"> = </span><span style="color:#ffd43b;">"automation, real-time systems, fastapi, flask"</span>
+          </p>
+          <p style="color:#4a4a4a;margin-bottom:4px;">$ <span style="color:#666;">python -c "print(stack)"</span></p>
+          <p style="margin-bottom:18px;">
+            <span style="color:#999;">[</span><span style="color:#4b8bbe;">'Python'</span><span style="color:#555;">, </span><span style="color:#4b8bbe;">'FastAPI'</span><span style="color:#555;">, </span><span style="color:#4b8bbe;">'WebSockets'</span><span style="color:#555;">, </span><span style="color:#4b8bbe;">'MySQL'</span><span style="color:#555;">, </span><span style="color:#4b8bbe;">'Linux'</span><span style="color:#555;">, </span><span style="color:#4b8bbe;">'REST'</span><span style="color:#999;">]</span>
+          </p>
+          <p style="color:#4a4a4a;">$ <span class="cursor-blink" style="color:#666;"></span></p>
+        </div>
+      </div>
+
+      <!-- Title block -->
+      <h1 class="anim-fadeup d2" style="font-size:clamp(22px,5vw,34px);font-weight:700;color:#efefef;letter-spacing:-.02em;line-height:1.2;margin-bottom:14px;">
+        Backend systems built<br>
+        <span style="color:#4b8bbe;">for precision</span> and <span style="color:#ffd43b;">speed.</span>
+      </h1>
+      <p class="anim-fadeup d3" style="font-size:12px;color:#666;line-height:1.8;max-width:480px;margin-bottom:28px;">
+        Python engineer specialising in automation pipelines, real-time communication architectures and custom backend infrastructure. Everything runs on my own machines.
+      </p>
+
+      <!-- CTA row -->
+      <div class="anim-fadeup d4" style="display:flex;align-items:center;flex-wrap:wrap;gap:12px;">
+        <a href="#projects"
+           style="display:inline-flex;align-items:center;gap:8px;background:#4b8bbe;color:#0a0a0a;font-size:11px;font-weight:700;letter-spacing:.06em;padding:10px 20px;transition:background .2s;"
+           onmouseover="this.style.background='#5a9fd0'" onmouseout="this.style.background='#4b8bbe'">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          VIEW PROJECTS
+        </a>
+        <a href="https://github.com/alesisce" target="_blank" rel="noopener"
+           style="display:inline-flex;align-items:center;gap:8px;border:1px solid #252525;color:#999;font-size:11px;font-weight:600;letter-spacing:.06em;padding:10px 20px;transition:all .2s;"
+           onmouseover="this.style.borderColor='#666';this.style.color='#d4d4d4'" onmouseout="this.style.borderColor='#252525';this.style.color='#999'">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.438 9.8 8.205 11.387.6.113.82-.258.82-.577v-2.165c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.84 1.237 1.84 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.605-2.665-.3-5.467-1.332-5.467-5.93 0-1.31.468-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.3 1.23A11.51 11.51 0 0 1 12 5.803c1.02.005 2.047.138 3.006.404 2.29-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.91 1.235 3.221 0 4.61-2.807 5.625-5.479 5.92.43.372.823 1.102.823 2.222v3.293c0 .322.218.694.825.576C20.565 21.796 24 17.298 24 12c0-6.63-5.37-12-12-12z"/></svg>
+          GITHUB →
+        </a>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════
+     INFRA PRIDE BANNER
+════════════════════════════════════════ -->
+<div class="infra-strip">
+  <div style="max-width:1000px;margin:0 auto;padding:14px 20px;display:flex;align-items:flex-start;gap:14px;position:relative;z-index:1;">
+    <svg style="flex-shrink:0;margin-top:2px;" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ffd43b" stroke-width="2" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="1"/><path d="M8 21h8M12 17v4"/><path d="M6 8h.01M6 12h.01"/></svg>
+    <p style="font-size:11px;line-height:1.8;color:#888;">
+      <span style="color:#ffd43b;font-weight:600;">[ INFRA ]</span>
+      &nbsp;This entire website was built from scratch, is hosted on my own private infrastructure, and runs on my custom Python backend.
+      <span style="color:#4a4a4a;">&nbsp;No Vercel. No Netlify. No Cloudflare Pages. Raw Linux VPS, Nginx reverse proxy, Uvicorn ASGI. Full ownership, zero vendor lock-in.</span>
+    </p>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     PROJECTS
+════════════════════════════════════════ -->
+<section id="projects" style="max-width:1000px;margin:0 auto;padding:64px 20px;">
+
+  <div class="sec-head">
+    <span class="num">01</span>
+    <h2>Projects</h2>
+    <div class="line"></div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:16px;">
+
+    <!-- ── ArgFlow Engine ── -->
+    <div class="card anim-fadeup d2" style="display:flex;flex-direction:column;">
+      <div style="padding:20px 20px 0;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;">
+          <div>
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#4b8bbe" stroke-width="2" stroke-linecap="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+              <span style="font-size:13px;font-weight:600;color:#efefef;">ArgFlow Engine</span>
+            </div>
+            <span style="font-size:10px;color:#4a4a4a;letter-spacing:.06em;">AUTOMATION · SCRIPTING</span>
+          </div>
+          <a href="https://github.com/alesisce" target="_blank" rel="noopener"
+             style="color:#2e2e2e;transition:color .2s;" onmouseover="this.style.color='#4b8bbe'" onmouseout="this.style.color='#2e2e2e'">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M7 7h10v10"/></svg>
+          </a>
+        </div>
+
+        <p style="font-size:11px;color:#666;line-height:1.8;margin-bottom:18px;">
+          Lightweight Python library that makes building CLI tools faster and easier than argparse. Trades advanced features for simplicity — define and parse arguments in a fraction of the code. Written in under 100 lines.
+        </p>
+
+        <!-- Metrics row -->
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:18px;">
+          <div style="background:#0d0d0d;border:1px solid #1c1c1c;padding:8px;text-align:center;">
+            <div style="font-size:16px;font-weight:700;color:#4b8bbe;">&lt;100</div>
+            <div style="font-size:9px;color:#4a4a4a;letter-spacing:.06em;margin-top:2px;">LINES</div>
+          </div>
+          <div style="background:#0d0d0d;border:1px solid #1c1c1c;padding:8px;text-align:center;">
+            <div style="font-size:16px;font-weight:700;color:#4b8bbe;">0</div>
+            <div style="font-size:9px;color:#4a4a4a;letter-spacing:.06em;margin-top:2px;">DEPS</div>
+          </div>
+          <div style="background:#0d0d0d;border:1px solid #1c1c1c;padding:8px;text-align:center;">
+            <div style="font-size:16px;font-weight:700;color:#4b8bbe;">CLI</div>
+            <div style="font-size:9px;color:#4a4a4a;letter-spacing:.06em;margin-top:2px;">INTERFACE</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Terminal snippet -->
+      <div style="background:#0d0d0d;border-top:1px solid #1c1c1c;padding:12px 16px;font-size:10px;margin-top:auto;">
+        <span style="color:#4a4a4a;">$</span>
+        <span style="color:#4b8bbe;"> python</span>
+        <span style="color:#d4d4d4;"> argflow.py</span>
+        <span style="color:#ffd43b;"> --run</span>
+        <span style="color:#999;"> pipeline --optimize</span>
+      </div>
+
+      <div style="padding:14px 20px;display:flex;gap:6px;flex-wrap:wrap;">
+        <span class="badge badge-blue">Python</span>
+        <span class="badge badge-gray">argparse</span>
+        <span class="badge badge-gray">CLI</span>
+        <span class="badge badge-gray">Automation</span>
+      </div>
+    </div>
+
+    <!-- ── Async Chat System ── -->
+    <div class="card anim-fadeup d3" style="display:flex;flex-direction:column;">
+      <div style="padding:20px 20px 0;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;">
+          <div>
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;">
+              <span class="status-dot"></span>
+              <span style="font-size:13px;font-weight:600;color:#efefef;">Async Chat System</span>
+            </div>
+            <span style="font-size:10px;color:#4a4a4a;letter-spacing:.06em;">REAL-TIME · BACKEND</span>
+          </div>
+          <a href="https://github.com/alesisce" target="_blank" rel="noopener"
+             style="color:#2e2e2e;transition:color .2s;" onmouseover="this.style.color='#3fb950'" onmouseout="this.style.color='#2e2e2e'">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M7 7h10v10"/></svg>
+          </a>
+        </div>
+
+        <p style="font-size:11px;color:#666;line-height:1.8;margin-bottom:18px;">
+          Real-time messaging platform over persistent WebSocket connections. Bidirectional communication with a clean RESTful endpoint layer for client integration. Messages are in-memory only — no database persistence.
+        </p>
+
+        <!-- Architecture diagram (ASCII style) -->
+        <div style="background:#0d0d0d;border:1px solid #1c1c1c;padding:12px 14px;font-size:9.5px;color:#4a4a4a;line-height:1.8;margin-bottom:18px;letter-spacing:.02em;">
+          <span style="color:#4b8bbe;">CLIENT</span>
+          <span style="color:#2e2e2e;"> ──ws://──▶ </span>
+          <span style="color:#d4d4d4;">FastAPI</span>
+          <span style="color:#2e2e2e;"> ──▶ </span>
+          <span style="color:#ffd43b;">WS Handler</span>
+          <br>
+          <span style="color:#2e2e2e;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└──▶ </span>
+          <span style="color:#555;">memory</span>
+          <span style="color:#2e2e2e;"> (no persist)</span>
+          <br>
+          <span style="color:#4b8bbe;">REST</span>
+          <span style="color:#2e2e2e;"> ────GET/POST──▶ </span>
+          <span style="color:#d4d4d4;">/api/messages</span>
+        </div>
+      </div>
+
+      <div style="background:#0d0d0d;border-top:1px solid #1c1c1c;padding:12px 16px;font-size:10px;margin-top:auto;">
+        <span style="color:#3fb950;">ws://</span>
+        <span style="color:#999;">chat.alesis.buzz</span>
+        <span style="color:#4b8bbe;">/ws/connect</span>
+      </div>
+
+      <div style="padding:14px 20px;display:flex;gap:6px;flex-wrap:wrap;">
+        <span class="badge badge-blue">WebSockets</span>
+        <span class="badge badge-yellow">REST API</span>
+        <span class="badge badge-gray">Async</span>
+        <span class="badge badge-green">Live</span>
+      </div>
+    </div>
+
+
+
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════
+     CLIENT TRACKER CTA
+════════════════════════════════════════ -->
+<section id="stack" style="border-top:1px solid #1c1c1c;">
+  <div style="max-width:1000px;margin:0 auto;padding:64px 20px;">
+
+    <div class="sec-head">
+      <span class="num">02</span>
+      <h2>Client Portal</h2>
+      <div class="line"></div>
+    </div>
+
+    <div class="card card-yellow" style="padding:40px 36px;display:flex;flex-direction:column;align-items:flex-start;gap:20px;position:relative;overflow:hidden;">
+      <!-- Background decoration -->
+      <div style="position:absolute;top:-40px;right:-40px;width:260px;height:260px;background:radial-gradient(circle,rgba(255,212,59,0.05) 0%,transparent 70%);pointer-events:none;"></div>
+
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div style="border:1px solid rgba(255,212,59,0.3);padding:10px;display:flex;align-items:center;justify-content:center;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffd43b" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="1"/><path d="M3 9h18M9 21V9"/></svg>
+        </div>
+        <div>
+          <div style="font-size:9px;letter-spacing:.1em;color:#ffd43b;font-weight:600;margin-bottom:3px;">FIVERR CLIENT</div>
+          <div style="font-size:16px;font-weight:700;color:#efefef;letter-spacing:-.01em;">Are you my client?</div>
+        </div>
+      </div>
+
+      <p style="font-size:12px;color:#666;line-height:1.9;max-width:480px;">
+        Track the real-time progress of your project — milestones, delivery status, and updates. All in one place, straight from my backend.
+      </p>
+
+      <a href="/track"
+         style="display:inline-flex;align-items:center;gap:9px;background:#ffd43b;color:#0a0a0a;font-size:11px;font-weight:700;letter-spacing:.07em;padding:11px 22px;transition:background .2s;flex-shrink:0;"
+         onmouseover="this.style.background='#ffe873'" onmouseout="this.style.background='#ffd43b'">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="1"/><path d="M3 9h18M9 21V9"/></svg>
+        TRACK MY PROJECT
+      </a>
+    </div>
+
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════
+     GITHUB CTA + CONTACT
+════════════════════════════════════════ -->
+<section id="contact" style="border-top:1px solid #1c1c1c;">
+  <div style="max-width:1000px;margin:0 auto;padding:64px 20px;">
+
+    <div class="sec-head">
+      <span class="num">03</span>
+      <h2>Contact</h2>
+      <div class="line"></div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;">
+
+      <!-- GitHub card -->
+      <a href="https://github.com/alesisce" target="_blank" rel="noopener" class="card"
+         style="padding:28px;display:flex;flex-direction:column;gap:16px;cursor:pointer;"
+         onmouseover="this.style.borderColor='#4b8bbe'" onmouseout="this.style.borderColor='#1c1c1c'">
+        <div style="display:flex;align-items:center;gap:14px;">
+          <div style="border:1px solid #252525;padding:10px;display:flex;align-items:center;justify-content:center;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="#999"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.438 9.8 8.205 11.387.6.113.82-.258.82-.577v-2.165c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.84 1.237 1.84 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.605-2.665-.3-5.467-1.332-5.467-5.93 0-1.31.468-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.3 1.23A11.51 11.51 0 0 1 12 5.803c1.02.005 2.047.138 3.006.404 2.29-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.91 1.235 3.221 0 4.61-2.807 5.625-5.479 5.92.43.372.823 1.102.823 2.222v3.293c0 .322.218.694.825.576C20.565 21.796 24 17.298 24 12c0-6.63-5.37-12-12-12z"/></svg>
+          </div>
+          <div>
+            <div style="font-size:13px;font-weight:600;color:#efefef;">github.com/alesisce</div>
+            <div style="font-size:10px;color:#4a4a4a;margin-top:3px;">Source code &amp; open projects</div>
+          </div>
+        </div>
+        <p style="font-size:11px;color:#555;line-height:1.8;">
+          Browse my public repositories, contributions and automation scripts. Most backend work lives here.
+        </p>
+        <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#4b8bbe;font-weight:600;letter-spacing:.04em;margin-top:auto;">
+          VIEW PROFILE
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </div>
+      </a>
+
+      <!-- Fiverr / hire card -->
+      <div class="card card-yellow" style="padding:28px;display:flex;flex-direction:column;gap:16px;">
+        <div style="display:flex;align-items:center;gap:14px;">
+          <div style="border:1px solid #252525;padding:10px;display:flex;align-items:center;justify-content:center;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffd43b" stroke-width="1.8" stroke-linecap="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+          </div>
+          <div>
+            <div style="font-size:13px;font-weight:600;color:#efefef;">Available for hire</div>
+            <div style="font-size:10px;color:#4a4a4a;margin-top:3px;">Backend, automation &amp; APIs</div>
+          </div>
+        </div>
+        <p style="font-size:11px;color:#555;line-height:1.8;">
+          Need a reliable Python backend, WebSocket system, or custom automation tool? Let's build it on solid, privately-hosted infrastructure.
+        </p>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:auto;">
+          <span class="badge badge-yellow">Fiverr</span>
+          <span class="badge badge-gray">Python</span>
+          <span class="badge badge-gray">Backend</span>
+          <span class="badge badge-gray">APIs</span>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════
+     FOOTER
+════════════════════════════════════════ -->
+<footer style="border-top:1px solid #1c1c1c;">
+  <div style="max-width:1000px;margin:0 auto;padding:22px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;font-size:10px;color:#4a4a4a;letter-spacing:.04em;">
+    <div style="display:flex;align-items:center;gap:8px;">
+      <span>alesis.buzz</span>
+      <span style="color:#252525;">·</span>
+      <span>Built from scratch. Hosted on private infrastructure.</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:16px;">
+      <span>Python backend</span>
+      <span style="color:#252525;">·</span>
+      <span style="display:flex;align-items:center;gap:5px;">
+        <span class="status-dot" style="width:5px;height:5px;"></span>
+        all systems operational
+      </span>
+    </div>
+  </div>
+</footer>
+
+<!-- ════════════════════════════════════════
+     VANILLA JS — progress bars & scroll
+════════════════════════════════════════ -->
+<script>
+  // Animate progress bars when they enter viewport
+  const bars = [
+    { id: 'bar1', pct: 'pct1', target: 78, color: '#4b8bbe' },
+    { id: 'bar2', pct: 'pct2', target: 55, color: '#ffd43b' },
+    { id: 'bar3', pct: 'pct3', target: 100, color: '#3fb950' },
+    { id: 'bar4', pct: 'pct4', target: 20, color: '#555' },
+  ];
+
+  let barsAnimated = false;
+
+  function animateBars() {
+    if (barsAnimated) return;
+    const portal = document.getElementById('bar1');
+    if (!portal) return;
+    const rect = portal.getBoundingClientRect();
+    if (rect.top < window.innerHeight) {
+      barsAnimated = true;
+      bars.forEach(function(b) {
+        const el  = document.getElementById(b.id);
+        const pct = document.getElementById(b.pct);
+        if (!el || !pct) return;
+        el.style.width = b.target + '%';
+        // Count-up animation
+        let cur = 0;
+        const step = b.target / 40;
+        const timer = setInterval(function() {
+          cur = Math.min(cur + step, b.target);
+          pct.textContent = Math.round(cur) + '%';
+          if (cur >= b.target) clearInterval(timer);
+        }, 30);
+      });
+    }
+  }
+
+  window.addEventListener('scroll', animateBars, { passive: true });
+  animateBars(); // check on load too
+</script>
+
+</body>
+</html>
