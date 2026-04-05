@@ -468,135 +468,127 @@
 </div>
 
 <script>
-  // ── Mock data ────────────────────────────────────────────────────────────────
-  const MOCK_PROJECTS = {
-    'ALX-2024-001': {
-      name:        'E-commerce Backend API',
-      client:      'john_doe_fiverr',
-      trackId:     'TRK-7F3A2B91',
-      description: 'Full REST API for an e-commerce platform. Includes product catalog, cart system, order management and payment webhook integration.',
-      status:      'active',
-      progress:    72,
-      updated:     '2024-12-18 · 14:32 UTC',
-      milestones: [
-        { label: 'Project setup & auth',   done: true  },
-        { label: 'Product & catalog API',  done: true  },
-        { label: 'Cart & order system',    done: true  },
-        { label: 'Payment webhooks',       done: false },
-        { label: 'Testing & deployment',   done: false },
-      ]
-    },
-    'ALX-2024-002': {
-      name:        'WebSocket Chat Module',
-      client:      'maria_dev',
-      trackId:     'TRK-C91D4E02',
-      description: 'Real-time bidirectional chat module built with FastAPI and WebSockets. In-memory message handling with REST endpoints for history retrieval.',
-      status:      'review',
-      progress:    95,
-      updated:     '2024-12-17 · 09:10 UTC',
-      milestones: [
-        { label: 'WS connection handling', done: true  },
-        { label: 'Message broadcast',      done: true  },
-        { label: 'REST /api/messages',     done: true  },
-        { label: 'Client review',          done: false },
-      ]
-    },
-    'ALX-2024-003': {
-      name:        'CLI Automation Tool',
-      client:      'techstartup_x',
-      trackId:     'TRK-0A5F8C33',
-      description: 'Custom automation script for batch processing and pipeline orchestration using ArgFlow. Handles file transforms, API calls and scheduled tasks.',
-      status:      'done',
-      progress:    100,
-      updated:     '2024-12-10 · 17:45 UTC',
-      milestones: [
-        { label: 'Argument parsing layer', done: true },
-        { label: 'Pipeline logic',         done: true },
-        { label: 'Error handling & logs',  done: true },
-        { label: 'Delivery & handoff',     done: true },
-      ]
-    },
-  };
+  // ── Config ───────────────────────────────────────────────────────────────────
+  const API_BASE = '';  // e.g. 'https://alesis.buzz' — leave empty if same origin
 
   const STATUS_CONFIG = {
-    active:  { label: 'ACTIVE',   color: '#4b8bbe', dot: '#4b8bbe', badge: 'badge-blue'   },
-    review:  { label: 'IN REVIEW',color: '#ffd43b', dot: '#ffd43b', badge: 'badge-yellow' },
-    done:    { label: 'DELIVERED',color: '#3fb950', dot: '#3fb950', badge: 'badge-green'  },
-    queued:  { label: 'QUEUED',   color: '#666',    dot: '#555',    badge: 'badge-gray'   },
-    paused:  { label: 'PAUSED',   color: '#ff8c00', dot: '#ff8c00', badge: 'badge-orange' },
+    active:  { label: 'ACTIVE',    dot: '#4b8bbe', badge: 'badge-blue'   },
+    review:  { label: 'IN REVIEW', dot: '#ffd43b', badge: 'badge-yellow' },
+    done:    { label: 'DELIVERED', dot: '#3fb950', badge: 'badge-green'  },
+    queued:  { label: 'QUEUED',    dot: '#555555', badge: 'badge-gray'   },
+    paused:  { label: 'PAUSED',    dot: '#ff8c00', badge: 'badge-orange' },
   };
 
   // ── Lookup ───────────────────────────────────────────────────────────────────
-  function lookupProject() {
-    const raw  = document.getElementById('codeInput').value.trim().toUpperCase();
+  async function lookupProject() {
+    const trackId = document.getElementById('codeInput').value.trim();
     const spinner = document.getElementById('spinner');
 
     hideError();
     hideResult();
 
-    if (!raw) {
+    if (!trackId) {
       showError('Please enter a project code.');
       return;
     }
 
     spinner.classList.add('active');
 
-    // Simulate async fetch
-    setTimeout(() => {
-      spinner.classList.remove('active');
-      const project = MOCK_PROJECTS[raw];
-      if (project) {
-        renderProject(raw, project);
-      } else {
-        showError(`No project found for code "${raw}". Double-check the code sent via Fiverr.`);
+    try {
+      const res = await fetch(`${API_BASE}/api/get_project/${encodeURIComponent(trackId)}`);
+
+      if (res.status === 404) {
+        showError(`No project found for code "${trackId}". Double-check the code sent via Fiverr.`);
+        return;
       }
-    }, 900);
+
+      if (!res.ok) {
+        throw new Error(`Server error: ${res.status}`);
+      }
+
+      const data = await res.json();
+      renderProject(trackId, data.track);
+
+    } catch (err) {
+      if (err instanceof TypeError) {
+        // Network / CORS failure
+        showError('Could not reach the server. Please try again later.');
+      } else {
+        showError(err.message);
+      }
+    } finally {
+      spinner.classList.remove('active');
+    }
   }
 
-  function renderProject(code, p) {
+  // ── Render ───────────────────────────────────────────────────────────────────
+  // Maps API response fields:
+  //   name, project_author_id, project_track_id, project_description,
+  //   project_status, project_priority, milestones, overall_progress, last_update
+  function renderProject(inputCode, p) {
     // Header
-    document.getElementById('displayCode').textContent = code;
+    document.getElementById('displayCode').textContent = p.project_track_id || inputCode;
 
     // Details
     document.getElementById('detailName').textContent    = p.name;
-    document.getElementById('detailClient').textContent  = p.client;
-    document.getElementById('detailTrackId').textContent = p.trackId;
-    document.getElementById('detailDesc').textContent    = p.description;
-    document.getElementById('detailUpdated').textContent = p.updated;
+    document.getElementById('detailClient').textContent  = p.project_author_id;
+    document.getElementById('detailTrackId').textContent = p.project_track_id;
+    document.getElementById('detailDesc').textContent    = p.project_description;
+
+    // last_update: ISO datetime → readable
+    document.getElementById('detailUpdated').textContent = formatDate(p.last_update);
 
     // Status
-    const s = STATUS_CONFIG[p.status] || STATUS_CONFIG['queued'];
+    const statusKey = (p.project_status || '').toLowerCase();
+    const s = STATUS_CONFIG[statusKey] || STATUS_CONFIG['queued'];
     document.getElementById('detailStatus').innerHTML =
       `<span style="display:inline-flex;align-items:center;gap:7px;">
         <span class="status-dot" style="background:${s.dot};box-shadow:0 0 6px ${s.dot}44;animation:pulse 2.4s ease-in-out infinite;"></span>
         <span class="badge ${s.badge}">${s.label}</span>
       </span>`;
 
-    // Progress bar (animate after paint)
-    document.getElementById('progressPct').textContent = p.progress + '%';
+    // Progress bar
+    const pct = p.overall_progress ?? 0;
+    document.getElementById('progressPct').textContent = pct + '%';
     setTimeout(() => {
-      document.getElementById('progressBar').style.width = p.progress + '%';
+      document.getElementById('progressBar').style.width = pct + '%';
     }, 80);
 
-    // Milestones
+    // Milestones — API returns Dict[str, bool] | null
     const milestoneEl = document.getElementById('milestones');
-    milestoneEl.innerHTML = p.milestones.map(m => `
-      <div style="display:flex;align-items:center;gap:10px;font-size:10px;">
-        <div style="width:16px;height:16px;border:1px solid ${m.done ? '#3fb950' : '#252525'};display:flex;align-items:center;justify-content:center;flex-shrink:0;background:${m.done ? 'rgba(63,185,80,0.08)' : 'transparent'};">
-          ${m.done
-            ? '<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#3fb950" stroke-width="3" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg>'
-            : '<div style="width:4px;height:4px;background:#252525;border-radius:50%;"></div>'
-          }
+    if (p.milestones && Object.keys(p.milestones).length > 0) {
+      milestoneEl.innerHTML = Object.entries(p.milestones).map(([label, done]) => `
+        <div style="display:flex;align-items:center;gap:10px;font-size:10px;">
+          <div style="width:16px;height:16px;border:1px solid ${done ? '#3fb950' : '#252525'};display:flex;align-items:center;justify-content:center;flex-shrink:0;background:${done ? 'rgba(63,185,80,0.08)' : 'transparent'};">
+            ${done
+              ? '<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#3fb950" stroke-width="3" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg>'
+              : '<div style="width:4px;height:4px;background:#252525;border-radius:50%;"></div>'
+            }
+          </div>
+          <span style="color:${done ? '#999' : '#3a3a3a'};">${label}</span>
+          ${done ? '' : '<span style="margin-left:auto;font-size:9px;color:#2e2e2e;letter-spacing:.06em;">PENDING</span>'}
         </div>
-        <span style="color:${m.done ? '#999' : '#3a3a3a'};">${m.label}</span>
-        ${m.done ? '' : '<span style="margin-left:auto;font-size:9px;color:#2e2e2e;letter-spacing:.06em;">PENDING</span>'}
-      </div>
-    `).join('');
+      `).join('');
+    } else {
+      milestoneEl.innerHTML = '<span style="font-size:10px;color:#2e2e2e;">No milestones defined.</span>';
+    }
 
     showResult();
   }
 
-  // ── UI helpers ───────────────────────────────────────────────────────────────
+  // ── Helpers ──────────────────────────────────────────────────────────────────
+  function formatDate(raw) {
+    if (!raw) return '—';
+    try {
+      const d = new Date(raw);
+      const date = d.toISOString().slice(0, 10);
+      const time = d.toISOString().slice(11, 16);
+      return `${date} · ${time} UTC`;
+    } catch {
+      return raw;
+    }
+  }
+
   function showResult() {
     const el = document.getElementById('resultPanel');
     el.classList.add('visible');
