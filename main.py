@@ -1,4 +1,5 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.templating import Jinja2Templates
 from source.config import Config
 from routers import frontend
 from routers import endpoints
@@ -8,6 +9,25 @@ import uvicorn
 server_path = os.path.abspath(os.path.dirname(__file__))
 server_config = Config(server_path, "server.json")
 app = FastAPI()
+templates = Jinja2Templates(directory="templates")
+
+# Errores 404 y 403
+@app.exception_handler(404)
+async def status_code_404(request: Request, exc):
+    return templates.TemplateResponse(
+        request=request,
+        name="404.html",
+        status_code=404
+    )
+
+@app.exception_handler(403)
+async def status_code_403(request: Request, exc):
+    return templates.TemplateResponse(
+        request=request,
+        name="403.html",
+        status_code=403
+    )
+
 
 # Incluir routers
 app.include_router(frontend.router)

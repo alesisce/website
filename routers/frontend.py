@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Request, Depends
 from fastapi.templating import Jinja2Templates
-from source.dependencies import get_db
+from source.dependencies import get_current_user
 
 router = APIRouter(tags=["website"]) # sin prefix porque no es necesario si es /
 templates = Jinja2Templates(directory="templates") # Para renderizar templates.
@@ -20,5 +20,25 @@ async def track(request: Request):
         request=request,
         name="track.html",
         context={},
+        status_code=200
+    )
+
+@router.get("/login")
+async def login(request: Request):
+    return templates.TemplateResponse(
+        request=request,
+        name="login.html",
+        context={},
+        status_code=200
+    )
+
+@router.get("/dashboard")
+async def dasboard(request: Request, user: dict = Depends(get_current_user)):
+    return templates.TemplateResponse(
+        request=request,
+        name="dashboard.html",
+        context={
+            "username": user["name"]
+        },
         status_code=200
     )

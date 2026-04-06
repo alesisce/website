@@ -160,3 +160,19 @@ class Database:
             project["milestones"] = json.loads(project["milestones"])
 
         return project
+    
+    def get_project_by_id(self, project_id: int) -> Optional[Dict[str, Any]]:
+        self.cur.execute(
+            "SELECT * FROM projects WHERE id=%s",
+            (project_id,)
+        )
+
+        project = self.cur.fetchone()
+
+        if not project:
+            return None
+
+        if project["milestones"]:
+            project["milestones"] = json.loads(project["milestones"])
+
+        return project
