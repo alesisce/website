@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login — alesis.buzz</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            mono: ['"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'monospace'],
+          },
+          colors: {
+            base:      '#0a0a0a',
+            surface:   '#0f0f0f',
+            raised:    '#141414',
+            border:    '#1c1c1c',
+            border2:   '#252525',
+            carbon:    '#2e2e2e',
+            dim:       '#4a4a4a',
+            muted:     '#666666',
+            soft:      '#999999',
+            bright:    '#d4d4d4',
+            white:     '#efefef',
+            pyblue:    '#4b8bbe',
+            pyblue2:   '#306998',
+            pyyellow:  '#ffd43b',
+            pyyellow2: '#ffe873',
+            online:    '#3fb950',
+          },
+        }
+      }
+    }
+  </script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { background: #0a0a0a; height: 100%; }
+
+    body {
+      background: #0a0a0a;
+      color: #d4d4d4;
+      font-family: 'JetBrains Mono', ui-monospace, monospace;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+      overflow-x: hidden;
+      line-height: 1.6;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Grain */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23g)' opacity='0.045'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 9998;
+    }
+
+    /* Scanlines */
+    body::after {
+      content: '';
+      position: fixed; inset: 0;
+      background: repeating-linear-gradient(to bottom, transparent 0px, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 3px);
+      pointer-events: none; z-index: 9997;
+    }
+
+    ::-webkit-scrollbar       { width: 3px; }
+    ::-webkit-scrollbar-track { background: #0a0a0a; }
+    ::-webkit-scrollbar-thumb { background: #1c1c1c; }
+    ::selection { background: rgba(75,139,190,0.25); color: #ffd43b; }
+
+    .dot-grid {
+      background-image: radial-gradient(circle, #1c1c1c 1px, transparent 1px);
+      background-size: 28px 28px;
+    }
+
+    /* Nav */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(10,10,10,0.88);
+      backdrop-filter: blur(14px) saturate(180%);
+      -webkit-backdrop-filter: blur(14px) saturate(180%);
+      border-bottom: 1px solid #1c1c1c;
+    }
+
+    .card {
+      background: #0f0f0f;
+      border: 1px solid #1c1c1c;
+      position: relative;
+    }
+
+    .term-bar {
+      display: flex; align-items: center; gap: 6px;
+      padding: 9px 13px;
+      border-bottom: 1px solid #1c1c1c;
+      background: #0d0d0d;
+    }
+    .td { width: 10px; height: 10px; border-radius: 50%; }
+    .td-r { background: #ff5f57; }
+    .td-y { background: #ffbd2e; }
+    .td-g { background: #28c840; }
+
+    /* Inputs */
+    .auth-input {
+      background: #0d0d0d;
+      border: 1px solid #252525;
+      color: #efefef;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      padding: 11px 14px;
+      width: 100%;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      letter-spacing: 0.02em;
+    }
+    .auth-input::placeholder { color: #2e2e2e; }
+    .auth-input:focus {
+      border-color: rgba(75,139,190,0.5);
+      box-shadow: 0 0 0 1px rgba(75,139,190,0.1);
+    }
+    .auth-input.input-password:focus {
+      border-color: rgba(255,212,59,0.4);
+      box-shadow: 0 0 0 1px rgba(255,212,59,0.08);
+    }
+    .auth-input.error {
+      border-color: rgba(255,95,87,0.5) !important;
+      box-shadow: 0 0 0 1px rgba(255,95,87,0.1) !important;
+    }
+
+    /* Button */
+    .btn-login {
+      background: #4b8bbe;
+      color: #0a0a0a;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      padding: 12px 24px;
+      border: none;
+      cursor: pointer;
+      width: 100%;
+      transition: background 0.2s, opacity 0.2s;
+    }
+    .btn-login:hover:not(:disabled) { background: #5a9fd0; }
+    .btn-login:active:not(:disabled) { background: #306998; }
+    .btn-login:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* Error banner */
+    .error-panel {
+      opacity: 0; transform: translateY(-6px);
+      transition: opacity 0.25s ease, transform 0.25s ease;
+      pointer-events: none;
+    }
+    .error-panel.visible {
+      opacity: 1; transform: translateY(0);
+      pointer-events: auto;
+    }
+
+    /* Spinner */
+    @keyframes spin  { to { transform: rotate(360deg); } }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
+
+    .spinner {
+      width: 13px; height: 13px;
+      border: 2px solid #1c1c1c;
+      border-top-color: #4b8bbe;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      display: none; flex-shrink: 0;
+    }
+    .spinner.active { display: block; }
+
+    .anim-fadeup { animation: fadeUp 0.55s cubic-bezier(.16,1,.3,1) both; }
+    .d1 { animation-delay: 0.04s; }
+    .d2 { animation-delay: 0.10s; }
+    .d3 { animation-delay: 0.17s; }
+    .d4 { animation-delay: 0.24s; }
+
+    /* Eye toggle */
+    .eye-btn {
+      position: absolute; right: 12px; top: 50%;
+      transform: translateY(-50%);
+      background: none; border: none; cursor: pointer;
+      color: #2e2e2e; transition: color 0.2s; padding: 4px;
+    }
+    .eye-btn:hover { color: #666; }
+
+    .badge {
+      display: inline-flex; align-items: center;
+      font-size: 10px; font-weight: 500;
+      letter-spacing: 0.05em; padding: 2px 8px;
+      border: 1px solid; line-height: 1.6;
+    }
+    .badge-blue { border-color: rgba(75,139,190,0.4); color: #4b8bbe; background: rgba(75,139,190,0.06); }
+
+    .infra-strip {
+      background: linear-gradient(90deg, rgba(75,139,190,0.06) 0%, rgba(255,212,59,0.05) 50%, rgba(75,139,190,0.06) 100%);
+      border-top: 1px solid rgba(75,139,190,0.2);
+      border-bottom: 1px solid rgba(75,139,190,0.2);
+      position: relative; overflow: hidden;
+    }
+    @keyframes scanX { from{transform:translateX(-100%)} to{transform:translateX(100%)} }
+    .infra-strip::after {
+      content: '';
+      position: absolute; top: 0; bottom: 0; width: 40%;
+      background: linear-gradient(90deg, transparent, rgba(75,139,190,0.06), transparent);
+      animation: scanX 4s ease-in-out infinite;
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    @media (max-width: 640px) {
+      .hide-sm { display: none !important; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div style="max-width:1000px;margin:0 auto;padding:0 20px;height:48px;display:flex;align-items:center;justify-content:space-between;">
+    <a href="/" style="display:flex;align-items:center;gap:10px;">
+      <span style="font-size:14px;font-weight:600;color:#efefef;letter-spacing:-.01em;">
+        alesis<span style="color:#4b8bbe;">.</span>buzz
+      </span>
+    </a>
+    <div style="display:flex;align-items:center;gap:24px;font-size:11px;color:#4a4a4a;letter-spacing:.06em;">
+      <a href="/#projects" class="hide-sm" style="transition:color .2s;" onmouseover="this.style.color='#d4d4d4'" onmouseout="this.style.color='#4a4a4a'">projects</a>
+      <a href="/#contact"  class="hide-sm" style="transition:color .2s;" onmouseover="this.style.color='#d4d4d4'" onmouseout="this.style.color='#4a4a4a'">contact</a>
+      <a href="https://github.com/alesisce" target="_blank" rel="noopener"
+         style="display:flex;align-items:center;gap:7px;border:1px solid #1c1c1c;padding:6px 13px;color:#999;transition:all .2s;"
+         onmouseover="this.style.borderColor='#4b8bbe';this.style.color='#4b8bbe';"
+         onmouseout="this.style.borderColor='#1c1c1c';this.style.color='#999';">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.438 9.8 8.205 11.387.6.113.82-.258.82-.577v-2.165c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.84 1.237 1.84 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.605-2.665-.3-5.467-1.332-5.467-5.93 0-1.31.468-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.3 1.23A11.51 11.51 0 0 1 12 5.803c1.02.005 2.047.138 3.006.404 2.29-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.91 1.235 3.221 0 4.61-2.807 5.625-5.479 5.92.43.372.823 1.102.823 2.222v3.293c0 .322.218.694.825.576C20.565 21.796 24 17.298 24 12c0-6.63-5.37-12-12-12z"/></svg>
+        github
+      </a>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO STRIP -->
+<section class="dot-grid" style="border-bottom:1px solid #1c1c1c;position:relative;overflow:hidden;">
+  <div style="position:absolute;top:-80px;left:50%;transform:translateX(-50%);width:600px;height:400px;background:radial-gradient(circle,rgba(75,139,190,0.05) 0%,transparent 65%);pointer-events:none;"></div>
+  <div style="max-width:1000px;margin:0 auto;padding:44px 20px 48px;position:relative;z-index:1;">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
+      <span style="font-size:9px;letter-spacing:.14em;color:#4a4a4a;font-weight:600;">ADMIN ACCESS</span>
+      <span style="color:#1c1c1c;">·</span>
+      <span class="badge badge-blue">PRIVATE</span>
+    </div>
+    <h1 style="font-size:clamp(18px,3.5vw,26px);font-weight:700;color:#efefef;letter-spacing:-.02em;line-height:1.2;margin-bottom:8px;">
+      Authenticate<span style="color:#4b8bbe;">.</span>
+    </h1>
+    <p style="font-size:11px;color:#555;line-height:1.8;max-width:360px;">
+      Restricted access. Credentials required to manage projects and client data.
+    </p>
+  </div>
+</section>
+
+<!-- MAIN -->
+<main style="flex:1;display:flex;align-items:flex-start;justify-content:center;padding:48px 20px 80px;">
+  <div style="width:100%;max-width:420px;">
+
+    <!-- Error banner -->
+    <div id="errorPanel" class="error-panel card" style="padding:14px 16px;margin-bottom:16px;border-color:rgba(255,95,87,0.2);display:flex;align-items:center;gap:10px;">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#ff5f57" stroke-width="2" stroke-linecap="round" style="flex-shrink:0;"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+      <span id="errorMsg" style="font-size:11px;color:#ff5f57;"></span>
+    </div>
+
+    <!-- Login card -->
+    <div class="card anim-fadeup d1">
+      <div class="term-bar" style="justify-content:space-between;">
+        <div style="display:flex;align-items:center;gap:6px;">
+          <div class="td td-r"></div><div class="td td-y"></div><div class="td td-g"></div>
+          <span style="margin-left:8px;font-size:10px;color:#4a4a4a;letter-spacing:.04em;">auth.py — login</span>
+        </div>
+        <div id="spinner" class="spinner"></div>
+      </div>
+
+      <div style="padding:28px 24px;display:flex;flex-direction:column;gap:20px;">
+
+        <!-- Username -->
+        <div class="anim-fadeup d2">
+          <div style="font-size:9px;letter-spacing:.1em;color:#4a4a4a;font-weight:600;margin-bottom:8px;">USERNAME</div>
+          <div style="position:relative;">
+            <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:11px;color:#2e2e2e;pointer-events:none;letter-spacing:.04em;">$&nbsp;</span>
+            <input
+              id="usernameInput"
+              class="auth-input"
+              type="text"
+              placeholder="your_username"
+              autocomplete="username"
+              spellcheck="false"
+              style="padding-left:30px;"
+            />
+          </div>
+        </div>
+
+        <!-- Password -->
+        <div class="anim-fadeup d3">
+          <div style="font-size:9px;letter-spacing:.1em;color:#4a4a4a;font-weight:600;margin-bottom:8px;">PASSWORD</div>
+          <div style="position:relative;">
+            <input
+              id="passwordInput"
+              class="auth-input input-password"
+              type="password"
+              placeholder="••••••••••••"
+              autocomplete="current-password"
+              style="padding-right:40px;"
+            />
+            <button class="eye-btn" id="eyeBtn" onclick="togglePassword()" tabindex="-1" aria-label="Toggle password visibility">
+              <svg id="eyeIcon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Submit -->
+        <div class="anim-fadeup d4">
+          <button class="btn-login" id="loginBtn" onclick="handleLogin()">
+            <span id="btnText" style="display:flex;align-items:center;justify-content:center;gap:8px;">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+              SIGN IN
+            </span>
+          </button>
+        </div>
+
+        <!-- Footer note -->
+        <div style="border-top:1px solid #141414;padding-top:16px;display:flex;align-items:center;justify-content:space-between;">
+          <span style="font-size:10px;color:#2e2e2e;letter-spacing:.04em;">alesis.buzz · admin</span>
+          <a href="track.html" style="font-size:10px;color:#4a4a4a;letter-spacing:.04em;transition:color .2s;" onmouseover="this.style.color='#666'" onmouseout="this.style.color='#4a4a4a'">
+            track a project →
+          </a>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<!-- FOOTER STRIP -->
+<div class="infra-strip">
+  <div style="max-width:1000px;margin:0 auto;padding:12px 20px;display:flex;align-items:center;gap:10px;position:relative;z-index:1;">
+    <svg style="flex-shrink:0;" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#4b8bbe" stroke-width="2" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="1"/><path d="M8 21h8M12 17v4"/></svg>
+    <span style="font-size:10px;color:#4a4a4a;line-height:1.7;">
+      <span style="color:#4b8bbe;font-weight:600;">[ alesis.buzz ]</span>
+      &nbsp;Private Python backend · Linux VPS · Zero vendor lock-in
+    </span>
+  </div>
+</div>
+
+<script>
+  // ── Config ───────────────────────────────────────────────────────────────────
+  const API_BASE    = '';           // e.g. 'https://alesis.buzz' — leave empty if same origin
+  const REDIRECT_TO = '/dashboard'; // redirect after successful login
+
+  // ── Login ────────────────────────────────────────────────────────────────────
+  async function handleLogin() {
+    const username = document.getElementById('usernameInput').value.trim();
+    const password = document.getElementById('passwordInput').value;
+
+    hideError();
+    clearInputErrors();
+
+    let hasError = false;
+    if (!username) { markError('usernameInput'); hasError = true; }
+    if (!password) { markError('passwordInput'); hasError = true; }
+    if (hasError) {
+      showError('Please fill in all fields.');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const res = await fetch(`${API_BASE}/api/login`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body:    JSON.stringify({ username, password }),
+      });
+
+      if (res.status === 401) {
+        markError('usernameInput');
+        markError('passwordInput');
+        showError('Invalid credentials. Please try again.');
+        return;
+      }
+
+      if (!res.ok) {
+        throw new Error(`Server error: ${res.status}`);
+      }
+
+      const data = await res.json();
+
+      // Store token if present (adapt to your auth scheme)
+      if (data.access_token) {
+        localStorage.setItem('access_token', data.access_token);
+      }
+
+      // Redirect
+      window.location.href = REDIRECT_TO;
+
+    } catch (err) {
+      if (err instanceof TypeError) {
+        showError('Could not reach the server. Please try again later.');
+      } else {
+        showError(err.message);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // ── UI helpers ───────────────────────────────────────────────────────────────
+  function setLoading(on) {
+    const btn     = document.getElementById('loginBtn');
+    const spinner = document.getElementById('spinner');
+    const btnText = document.getElementById('btnText');
+    btn.disabled        = on;
+    spinner.classList.toggle('active', on);
+    btnText.style.opacity = on ? '0.5' : '1';
+  }
+
+  function showError(msg) {
+    document.getElementById('errorMsg').textContent = msg;
+    document.getElementById('errorPanel').classList.add('visible');
+  }
+
+  function hideError() {
+    document.getElementById('errorPanel').classList.remove('visible');
+  }
+
+  function markError(id) {
+    document.getElementById(id).classList.add('error');
+  }
+
+  function clearInputErrors() {
+    document.getElementById('usernameInput').classList.remove('error');
+    document.getElementById('passwordInput').classList.remove('error');
+  }
+
+  function togglePassword() {
+    const input = document.getElementById('passwordInput');
+    const icon  = document.getElementById('eyeIcon');
+    const show  = input.type === 'password';
+    input.type  = show ? 'text' : 'password';
+    icon.innerHTML = show
+      ? '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>'
+      : '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+  }
+
+  // Enter key support
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter') handleLogin();
+  });
+
+  // Clear error on input
+  ['usernameInput', 'passwordInput'].forEach(id => {
+    document.getElementById(id).addEventListener('input', () => {
+      document.getElementById(id).classList.remove('error');
+      hideError();
+    });
+  });
+</script>
+
+</body>
+</html>

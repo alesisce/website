@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard — alesis.buzz</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { background: #0a0a0a; height: 100%; }
+
+    body {
+      background: #0a0a0a;
+      color: #d4d4d4;
+      font-family: 'JetBrains Mono', ui-monospace, monospace;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+      overflow-x: hidden;
+      line-height: 1.6;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Grain */
+    body::before {
+      content: ''; position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23g)' opacity='0.045'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 9998;
+    }
+    body::after {
+      content: ''; position: fixed; inset: 0;
+      background: repeating-linear-gradient(to bottom, transparent 0px, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 3px);
+      pointer-events: none; z-index: 9997;
+    }
+
+    ::-webkit-scrollbar { width: 3px; }
+    ::-webkit-scrollbar-track { background: #0a0a0a; }
+    ::-webkit-scrollbar-thumb { background: #1c1c1c; }
+    ::selection { background: rgba(75,139,190,0.25); color: #ffd43b; }
+
+    a { color: inherit; text-decoration: none; }
+
+    /* ── Nav ── */
+    nav {
+      position: sticky; top: 0; z-index: 200;
+      background: rgba(10,10,10,0.92);
+      backdrop-filter: blur(14px) saturate(180%);
+      border-bottom: 1px solid #1c1c1c;
+    }
+
+    /* ── Cards ── */
+    .card {
+      background: #0f0f0f;
+      border: 1px solid #1c1c1c;
+      position: relative;
+    }
+
+    .term-bar {
+      display: flex; align-items: center; gap: 6px;
+      padding: 8px 13px;
+      border-bottom: 1px solid #1c1c1c;
+      background: #0d0d0d;
+    }
+    .td { width: 9px; height: 9px; border-radius: 50%; }
+    .td-r { background: #ff5f57; } .td-y { background: #ffbd2e; } .td-g { background: #28c840; }
+
+    /* ── Badges ── */
+    .badge {
+      display: inline-flex; align-items: center;
+      font-size: 9px; font-weight: 600; letter-spacing: 0.06em;
+      padding: 2px 7px; border: 1px solid; line-height: 1.6;
+    }
+    .badge-blue   { border-color: rgba(75,139,190,0.4);  color: #4b8bbe; background: rgba(75,139,190,0.06); }
+    .badge-yellow { border-color: rgba(255,212,59,0.4);  color: #ffd43b; background: rgba(255,212,59,0.06); }
+    .badge-gray   { border-color: #252525; color: #555; background: rgba(255,255,255,0.02); }
+    .badge-green  { border-color: rgba(63,185,80,0.4);   color: #3fb950; background: rgba(63,185,80,0.06); }
+    .badge-orange { border-color: rgba(255,140,0,0.4);   color: #ff8c00; background: rgba(255,140,0,0.06); }
+    .badge-red    { border-color: rgba(255,95,87,0.4);   color: #ff5f57; background: rgba(255,95,87,0.06); }
+
+    /* ── Buttons ── */
+    .btn {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
+      padding: 8px 16px; border: 1px solid; cursor: pointer;
+      display: inline-flex; align-items: center; gap: 7px;
+      transition: all 0.18s; background: none;
+    }
+    .btn-primary { background: #4b8bbe; color: #0a0a0a; border-color: #4b8bbe; }
+    .btn-primary:hover { background: #5a9fd0; border-color: #5a9fd0; }
+    .btn-ghost   { color: #666; border-color: #1c1c1c; }
+    .btn-ghost:hover { color: #d4d4d4; border-color: #333; }
+    .btn-danger  { color: #ff5f57; border-color: rgba(255,95,87,0.3); }
+    .btn-danger:hover { background: rgba(255,95,87,0.08); border-color: rgba(255,95,87,0.5); }
+    .btn-yellow  { background: #ffd43b; color: #0a0a0a; border-color: #ffd43b; }
+    .btn-yellow:hover { background: #ffe873; border-color: #ffe873; }
+    .btn-sm { padding: 5px 10px; font-size: 9px; }
+
+    /* ── Inputs ── */
+    .field-input, .field-select, .field-textarea {
+      background: #0d0d0d; border: 1px solid #252525;
+      color: #efefef; font-family: 'JetBrains Mono', monospace;
+      font-size: 11px; padding: 8px 10px; outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      width: 100%;
+    }
+    .field-input::placeholder, .field-textarea::placeholder { color: #2e2e2e; }
+    .field-input:focus, .field-select:focus, .field-textarea:focus {
+      border-color: rgba(75,139,190,0.4);
+      box-shadow: 0 0 0 1px rgba(75,139,190,0.08);
+    }
+    .field-select { cursor: pointer; appearance: none; -webkit-appearance: none; }
+    .field-textarea { resize: vertical; min-height: 70px; line-height: 1.7; }
+    .field-label { font-size: 9px; letter-spacing: .1em; color: #4a4a4a; font-weight: 600; margin-bottom: 6px; display: block; }
+
+    /* ── Progress bar ── */
+    .pbar { height: 3px; background: #1c1c1c; width: 100%; }
+    .pbar-fill { height: 100%; transition: width 0.8s cubic-bezier(.16,1,.3,1); }
+
+    /* ── Status dot ── */
+    .sdot {
+      display: inline-block; width: 6px; height: 6px;
+      border-radius: 50%; flex-shrink: 0;
+    }
+
+    /* ── Modal backdrop ── */
+    .modal-backdrop {
+      position: fixed; inset: 0; z-index: 500;
+      background: rgba(0,0,0,0.75);
+      backdrop-filter: blur(4px);
+      display: none; align-items: center; justify-content: center;
+      padding: 20px;
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal {
+      background: #0f0f0f; border: 1px solid #252525;
+      width: 100%; max-width: 520px;
+      max-height: 90vh; overflow-y: auto;
+      animation: slideUp 0.25s cubic-bezier(.16,1,.3,1);
+    }
+    @keyframes slideUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+
+    /* ── Project card ── */
+    .project-card {
+      background: #0f0f0f; border: 1px solid #1c1c1c;
+      transition: border-color 0.2s;
+    }
+    .project-card:hover { border-color: #252525; }
+
+    /* ── Priority stripe ── */
+    .priority-stripe {
+      width: 3px; flex-shrink: 0; align-self: stretch;
+    }
+
+    /* ── Milestone row ── */
+    .milestone-row {
+      display: flex; align-items: center; gap: 8px;
+      padding: 7px 0; border-bottom: 1px solid #111;
+      font-size: 10px;
+    }
+    .milestone-row:last-child { border-bottom: none; }
+
+    /* ── Animations ── */
+    @keyframes fadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+    .fade-in { animation: fadeUp 0.3s cubic-bezier(.16,1,.3,1) both; }
+
+    @keyframes scanX { from{transform:translateX(-100%)} to{transform:translateX(100%)} }
+    .infra-strip {
+      background: linear-gradient(90deg, rgba(75,139,190,0.06) 0%, rgba(255,212,59,0.05) 50%, rgba(75,139,190,0.06) 100%);
+      border-top: 1px solid rgba(75,139,190,0.15);
+      position: relative; overflow: hidden;
+      margin-top: auto;
+    }
+    .infra-strip::after {
+      content: ''; position: absolute; top: 0; bottom: 0; width: 40%;
+      background: linear-gradient(90deg, transparent, rgba(75,139,190,0.06), transparent);
+      animation: scanX 4s ease-in-out infinite;
+    }
+
+    /* ── Toast ── */
+    #toast {
+      position: fixed; bottom: 24px; right: 24px; z-index: 9999;
+      background: #141414; border: 1px solid #252525;
+      padding: 12px 18px; font-size: 11px; color: #d4d4d4;
+      display: flex; align-items: center; gap: 10px;
+      transform: translateY(60px); opacity: 0;
+      transition: transform 0.3s cubic-bezier(.16,1,.3,1), opacity 0.3s;
+      pointer-events: none;
+    }
+    #toast.show { transform: translateY(0); opacity: 1; }
+
+    @media (max-width: 640px) {
+      .hide-sm { display: none !important; }
+      .action-bar { flex-wrap: wrap; gap: 8px !important; }
+    }
+
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+  </style>
+</head>
+<body>
+
+<!-- ── NAV ── -->
+<nav>
+  <div style="max-width:1100px;margin:0 auto;padding:0 20px;height:48px;display:flex;align-items:center;justify-content:space-between;">
+    <a href="/" style="display:flex;align-items:center;gap:10px;">
+      <span style="font-size:14px;font-weight:600;color:#efefef;letter-spacing:-.01em;">
+        alesis<span style="color:#4b8bbe;">.</span>buzz
+      </span>
+      <span style="font-size:9px;letter-spacing:.1em;color:#4a4a4a;padding:2px 7px;border:1px solid #1c1c1c;">ADMIN</span>
+    </a>
+    <div style="display:flex;align-items:center;gap:16px;font-size:11px;color:#4a4a4a;letter-spacing:.06em;">
+      <div style="display:flex;align-items:center;gap:6px;" class="hide-sm">
+        <span class="sdot" style="background:#3fb950;box-shadow:0 0 5px #3fb95066;animation:pulse 2.4s ease-in-out infinite;"></span>
+        <span style="font-size:10px;color:#3fb950;">online</span>
+      </div>
+      <span class="hide-sm" style="color:#1c1c1c;">|</span>
+      <span class="hide-sm" style="font-size:10px;color:#4a4a4a;">{{ username }}</span>
+      <button class="btn btn-ghost btn-sm" onclick="handleLogout()">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        LOGOUT
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- ── ACTION BAR ── -->
+<div style="border-bottom:1px solid #1c1c1c;background:#0a0a0a;position:sticky;top:48px;z-index:100;">
+  <div style="max-width:1100px;margin:0 auto;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;" class="action-bar">
+
+    <div style="display:flex;align-items:center;gap:10px;">
+      <span style="font-size:9px;letter-spacing:.12em;color:#4a4a4a;font-weight:600;">PROJECTS</span>
+      <span id="projectCount" style="font-size:9px;color:#252525;letter-spacing:.06em;">— 3 total</span>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:8px;">
+      <div style="display:flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid #1c1c1c;font-size:9px;color:#4a4a4a;letter-spacing:.06em;" class="hide-sm">
+        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="6" y1="12" x2="18" y2="12"/><line x1="9" y1="18" x2="15" y2="18"/></svg>
+        SORTED BY PRIORITY
+      </div>
+      <button class="btn btn-primary" onclick="openCreateModal()">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        CREATE PROJECT
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── MAIN ── -->
+<main style="flex:1;width:100%;">
+  <div style="max-width:1100px;margin:0 auto;padding:28px 20px 80px;">
+
+    <div id="projectList" style="display:flex;flex-direction:column;gap:12px;"></div>
+
+    <!-- Empty state -->
+    <div id="emptyState" style="display:none;padding:60px 20px;text-align:center;">
+      <div style="font-size:11px;color:#2e2e2e;letter-spacing:.06em;margin-bottom:12px;">NO PROJECTS YET</div>
+      <button class="btn btn-primary" onclick="openCreateModal()">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        CREATE FIRST PROJECT
+      </button>
+    </div>
+
+  </div>
+</main>
+
+<!-- ── FOOTER ── -->
+<div class="infra-strip">
+  <div style="max-width:1100px;margin:0 auto;padding:12px 20px;display:flex;align-items:center;gap:10px;position:relative;z-index:1;">
+    <svg style="flex-shrink:0;" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#4b8bbe" stroke-width="2" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="1"/><path d="M8 21h8M12 17v4"/></svg>
+    <span style="font-size:10px;color:#4a4a4a;">
+      <span style="color:#4b8bbe;font-weight:600;">[ alesis.buzz ]</span>
+      &nbsp;Private Python backend · Linux VPS · Zero vendor lock-in
+    </span>
+  </div>
+</div>
+
+<!-- ════════════════════════════════
+     MODAL: CREATE PROJECT
+════════════════════════════════ -->
+<div id="createModal" class="modal-backdrop">
+  <div class="modal">
+    <div class="term-bar" style="justify-content:space-between;">
+      <div style="display:flex;align-items:center;gap:6px;">
+        <div class="td td-r"></div><div class="td td-y"></div><div class="td td-g"></div>
+        <span style="margin-left:8px;font-size:10px;color:#4a4a4a;">new_project.py</span>
+      </div>
+      <button onclick="closeModal('createModal')" style="background:none;border:none;color:#4a4a4a;cursor:pointer;font-size:16px;padding:0 4px;" onmouseover="this.style.color='#999'" onmouseout="this.style.color='#4a4a4a'">&times;</button>
+    </div>
+    <div style="padding:24px;display:flex;flex-direction:column;gap:16px;">
+
+      <div>
+        <label class="field-label">PROJECT NAME</label>
+        <input id="c_name" class="field-input" type="text" placeholder="e.g. E-commerce Backend API" />
+      </div>
+
+      <div>
+        <label class="field-label">CLIENT (author id)</label>
+        <input id="c_author" class="field-input" type="text" placeholder="fiverr_username" />
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div>
+          <label class="field-label">STATUS</label>
+          <div style="position:relative;">
+            <select id="c_status" class="field-select">
+              <option value="pending" selected>Pending</option>
+              <option value="working">Working</option>
+              <option value="almost">Almost</option>
+              <option value="done">Done</option>
+            </select>
+            <svg style="position:absolute;right:10px;top:50%;transform:translateY(-50%);pointer-events:none;" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#4a4a4a" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+        </div>
+        <div>
+          <label class="field-label">PRIORITY (1–10)</label>
+          <input id="c_priority" class="field-input" type="number" min="1" max="3" value="1" />
+        </div>
+      </div>
+
+      <div>
+        <label class="field-label">OVERALL PROGRESS (%)</label>
+        <input id="c_progress" class="field-input" type="number" min="0" max="100" value="0" placeholder="0" />
+      </div>
+
+      <div>
+        <label class="field-label">DESCRIPTION</label>
+        <textarea id="c_desc" class="field-textarea" placeholder="Brief description of the project scope..."></textarea>
+      </div>
+
+      <div style="border-top:1px solid #141414;padding-top:16px;">
+        <label class="field-label" style="margin-bottom:12px;">MILESTONES</label>
+        <div id="c_milestones" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px;"></div>
+        <button class="btn btn-ghost btn-sm" onclick="addMilestoneField('c_milestones')">
+          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          ADD MILESTONE
+        </button>
+      </div>
+
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:4px;">
+        <button class="btn btn-ghost" onclick="closeModal('createModal')">CANCEL</button>
+        <button class="btn btn-primary" onclick="submitCreate()">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+          CREATE PROJECT
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════
+     MODAL: EDIT PROJECT
+════════════════════════════════ -->
+<div id="editModal" class="modal-backdrop">
+  <div class="modal">
+    <div class="term-bar" style="justify-content:space-between;">
+      <div style="display:flex;align-items:center;gap:6px;">
+        <div class="td td-r"></div><div class="td td-y"></div><div class="td td-g"></div>
+        <span style="margin-left:8px;font-size:10px;color:#4a4a4a;">edit_project.py — <span id="editModalTitle" style="color:#ffd43b;"></span></span>
+      </div>
+      <button onclick="closeModal('editModal')" style="background:none;border:none;color:#4a4a4a;cursor:pointer;font-size:16px;padding:0 4px;" onmouseover="this.style.color='#999'" onmouseout="this.style.color='#4a4a4a'">&times;</button>
+    </div>
+    <div style="padding:24px;display:flex;flex-direction:column;gap:16px;">
+
+      <input type="hidden" id="e_id" />
+
+      <div>
+        <label class="field-label">PROJECT NAME</label>
+        <input id="e_name" class="field-input" type="text" />
+      </div>
+
+      <div>
+        <label class="field-label">CLIENT (author id)</label>
+        <input id="e_author" class="field-input" type="text" />
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div>
+          <label class="field-label">STATUS</label>
+          <div style="position:relative;">
+            <select id="e_status" class="field-select">
+              <option value="pending">Pending</option>
+              <option value="working">Working</option>
+              <option value="almost">Almost</option>
+              <option value="done">Done</option>
+            </select>
+            <svg style="position:absolute;right:10px;top:50%;transform:translateY(-50%);pointer-events:none;" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#4a4a4a" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+        </div>
+        <div>
+          <label class="field-label">PRIORITY (1–10)</label>
+          <input id="e_priority" class="field-input" type="number" min="1" max="3" />
+        </div>
+      </div>
+
+      <div>
+        <label class="field-label">OVERALL PROGRESS (%)</label>
+        <input id="e_progress" class="field-input" type="number" min="0" max="100" />
+      </div>
+
+      <div>
+        <label class="field-label">DESCRIPTION</label>
+        <textarea id="e_desc" class="field-textarea"></textarea>
+      </div>
+
+      <div style="border-top:1px solid #141414;padding-top:16px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <label class="field-label" style="margin-bottom:0;">MILESTONES</label>
+          <button class="btn btn-ghost btn-sm" onclick="addMilestoneField('e_milestones')">
+            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            ADD
+          </button>
+        </div>
+        <div id="e_milestones" style="display:flex;flex-direction:column;gap:6px;"></div>
+      </div>
+
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:4px;">
+        <button class="btn btn-ghost" onclick="closeModal('editModal')">CANCEL</button>
+        <button class="btn btn-yellow" onclick="submitEdit()">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          SAVE CHANGES
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════
+     MODAL: DELETE CONFIRM
+════════════════════════════════ -->
+<div id="deleteModal" class="modal-backdrop">
+  <div class="modal" style="max-width:380px;">
+    <div class="term-bar">
+      <div class="td td-r"></div><div class="td td-y"></div><div class="td td-g"></div>
+      <span style="margin-left:8px;font-size:10px;color:#ff5f57;">confirm_delete.py</span>
+    </div>
+    <div style="padding:24px;display:flex;flex-direction:column;gap:16px;">
+      <div>
+        <div style="font-size:12px;font-weight:600;color:#efefef;margin-bottom:8px;">Delete project?</div>
+        <p style="font-size:11px;color:#555;line-height:1.8;">
+          This will permanently remove <span id="deleteProjectName" style="color:#ffd43b;"></span> and all its milestones. This action cannot be undone.
+        </p>
+      </div>
+      <input type="hidden" id="deleteProjectId" />
+      <div style="display:flex;gap:8px;justify-content:flex-end;">
+        <button class="btn btn-ghost" onclick="closeModal('deleteModal')">CANCEL</button>
+        <button class="btn btn-danger" onclick="submitDelete()">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+          DELETE
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script>
+  const API_BASE = '';
+
+  const STATUS_CFG = {
+    pending: { label: 'PENDING', dot: '#555555', badge: 'badge-gray'   },
+    working: { label: 'WORKING', dot: '#4b8bbe', badge: 'badge-blue'   },
+    almost:  { label: 'ALMOST',  dot: '#ffd43b', badge: 'badge-yellow' },
+    done:    { label: 'DONE',    dot: '#3fb950', badge: 'badge-green'  },
+  };
+
+  const PRIORITY_COLOR = (p) => p === 3 ? '#ff5f57' : p === 2 ? '#ffd43b' : '#4b8bbe';
+
+  let projects = [];
+
+  async function apiFetch(url, options = {}) {
+    const res = await fetch(API_BASE + url, {
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json', ...options.headers },
+      ...options,
+    });
+    if (res.status === 401) { window.location.href = '/login'; return null; }
+    return res;
+  }
+
+  async function loadProjects() {
+    const res = await apiFetch('/api/get_projects');
+    if (!res) return;
+    projects = (await res.json()).reverse();
+    renderProjects();
+    applyResponsive();
+  }
+
+  function renderProjects() {
+    const list  = document.getElementById('projectList');
+    const empty = document.getElementById('emptyState');
+    const count = document.getElementById('projectCount');
+
+    count.textContent = `— ${projects.length} total`;
+
+    if (projects.length === 0) {
+      list.innerHTML = '';
+      empty.style.display = 'block';
+      return;
+    }
+    empty.style.display = 'none';
+
+    list.innerHTML = projects.map((p, i) => {
+      const statusKey = (p.project_status || '').toLowerCase();
+      const s   = STATUS_CFG[statusKey] || STATUS_CFG.pending;
+      const pc  = PRIORITY_COLOR(p.project_priority);
+      const ms  = p.milestones ? Object.entries(p.milestones) : [];
+      const done = ms.filter(([,v]) => v).length;
+      const pct  = p.overall_progress ?? 0;
+      const date = p.last_update ? String(p.last_update).slice(0,10) : '—';
+
+      const milestonesHTML = ms.length
+        ? ms.map(([label, isDone]) => `
+            <div class="milestone-row">
+              <div style="width:14px;height:14px;border:1px solid ${isDone ? '#3fb950' : '#252525'};display:flex;align-items:center;justify-content:center;flex-shrink:0;background:${isDone ? 'rgba(63,185,80,0.08)' : 'transparent'};">
+                ${isDone
+                  ? '<svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#3fb950" stroke-width="3" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg>'
+                  : '<div style="width:3px;height:3px;background:#252525;border-radius:50%;"></div>'
+                }
+              </div>
+              <span style="color:${isDone ? '#666' : '#3a3a3a'};flex:1;">${label}</span>
+              ${isDone ? '' : '<span style="font-size:9px;color:#2e2e2e;">PENDING</span>'}
+            </div>
+          `).join('')
+        : '<span style="font-size:10px;color:#2e2e2e;">No milestones defined.</span>';
+
+      return `
+        <div class="project-card fade-in" style="animation-delay:${i * 0.04}s;display:flex;">
+          <div class="priority-stripe" style="background:${pc}22;border-right:2px solid ${pc};"></div>
+          <div style="flex:1;padding:0;">
+            <div style="padding:14px 18px;border-bottom:1px solid #141414;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+              <div style="display:flex;align-items:center;gap:12px;">
+                <div style="font-size:11px;font-weight:700;color:${pc};min-width:36px;text-align:center;">${['','LOW','MED','HIGH'][p.project_priority] || p.project_priority}</div>
+                <div>
+                  <div style="font-size:13px;font-weight:600;color:#efefef;margin-bottom:2px;">${p.name}</div>
+                  <div style="display:flex;align-items:center;gap:8px;">
+                    <span style="font-size:9px;color:#4a4a4a;letter-spacing:.06em;">${p.project_track_id}</span>
+                    <span style="color:#1c1c1c;">·</span>
+                    <span style="font-size:9px;color:#4a4a4a;">${p.project_author_id}</span>
+                  </div>
+                </div>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span style="display:inline-flex;align-items:center;gap:6px;">
+                  <span class="sdot" style="background:${s.dot};"></span>
+                  <span class="badge ${s.badge}">${s.label}</span>
+                </span>
+                <button class="btn btn-ghost btn-sm" onclick="openEditModal(${p.id})">
+                  <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  EDIT
+                </button>
+                <button class="btn btn-danger btn-sm" onclick="openDeleteModal(${p.id}, '${p.name.replace(/'/g,"\\'")}')">
+                  <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+                  DELETE
+                </button>
+              </div>
+            </div>
+            <div style="padding:16px 18px;display:grid;grid-template-columns:1fr 1fr;gap:24px;" class="card-body-grid">
+              <div>
+                <p style="font-size:10px;color:#555;line-height:1.8;margin-bottom:16px;">${p.project_description}</p>
+                <div style="margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;">
+                  <span style="font-size:9px;letter-spacing:.1em;color:#4a4a4a;font-weight:600;">PROGRESS</span>
+                  <span style="font-size:13px;font-weight:700;color:${pct === 100 ? '#3fb950' : '#d4d4d4'};">${pct}%</span>
+                </div>
+                <div class="pbar" style="height:4px;">
+                  <div class="pbar-fill" style="width:${pct}%;background:${pct === 100 ? '#3fb950' : 'linear-gradient(90deg,#4b8bbe,#ffd43b)'};"></div>
+                </div>
+                <div style="margin-top:10px;font-size:9px;color:#2e2e2e;">updated ${date}</div>
+              </div>
+              <div>
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+                  <span style="font-size:9px;letter-spacing:.1em;color:#4a4a4a;font-weight:600;">MILESTONES</span>
+                  <span style="font-size:9px;color:#4a4a4a;">${done}/${ms.length} done</span>
+                </div>
+                ${milestonesHTML}
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function addMilestoneField(containerId, label = '', done = false) {
+    const container = document.getElementById(containerId);
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:6px;';
+    row.innerHTML = `
+      <input type="checkbox" ${done ? 'checked' : ''} style="accent-color:#3fb950;width:14px;height:14px;cursor:pointer;flex-shrink:0;" />
+      <input type="text" class="field-input" value="${label}" placeholder="Milestone name..." style="flex:1;" />
+      <button onclick="this.parentElement.remove()" style="background:none;border:1px solid #1c1c1c;color:#4a4a4a;cursor:pointer;padding:6px 8px;transition:all .2s;flex-shrink:0;" onmouseover="this.style.color='#ff5f57';this.style.borderColor='rgba(255,95,87,0.3)'" onmouseout="this.style.color='#4a4a4a';this.style.borderColor='#1c1c1c'">
+        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    `;
+    container.appendChild(row);
+  }
+
+  function getMilestonesFromContainer(containerId) {
+    const result = {};
+    document.getElementById(containerId).querySelectorAll('div').forEach(row => {
+      const cb    = row.querySelector('input[type="checkbox"]');
+      const input = row.querySelector('input[type="text"]');
+      if (input && input.value.trim()) result[input.value.trim()] = cb ? cb.checked : false;
+    });
+    return result;
+  }
+
+  function openCreateModal() {
+    document.getElementById('c_name').value     = '';
+    document.getElementById('c_author').value   = '';
+    document.getElementById('c_status').value   = 'pending';
+    document.getElementById('c_priority').value = '1';
+    document.getElementById('c_progress').value = '0';
+    document.getElementById('c_desc').value     = '';
+    document.getElementById('c_milestones').innerHTML = '';
+    openModal('createModal');
+  }
+
+  async function submitCreate() {
+    const name = document.getElementById('c_name').value.trim();
+    if (!name) { showToast('Project name is required.', 'error'); return; }
+
+    const body = {
+      name,
+      author:      document.getElementById('c_author').value.trim(),
+      description: document.getElementById('c_desc').value.trim(),
+      status:      document.getElementById('c_status').value.toUpperCase(),
+      priority:    parseInt(document.getElementById('c_priority').value) || 1,
+      progress:    parseInt(document.getElementById('c_progress').value) || 0,
+      milestones:  getMilestonesFromContainer('c_milestones'),
+    };
+
+    const res = await apiFetch('/api/create_project', {
+      method: 'PUT',
+      body: JSON.stringify(body),
+    });
+    if (!res) return;
+    if (!res.ok) { showToast('Failed to create project.', 'error'); return; }
+
+    const newProject = await res.json();
+    projects.unshift(newProject);
+    projects.sort((a, b) => b.project_priority - a.project_priority);
+    renderProjects();
+    closeModal('createModal');
+    showToast(`"${name}" created.`, 'success');
+  }
+
+  function openEditModal(id) {
+    const p = projects.find(x => x.id === id);
+    if (!p) return;
+
+    document.getElementById('editModalTitle').textContent = p.project_track_id;
+    document.getElementById('e_id').value       = p.id;
+    document.getElementById('e_name').value     = p.name;
+    document.getElementById('e_author').value   = p.project_author_id;
+    document.getElementById('e_status').value   = (p.project_status || '').toLowerCase();
+    document.getElementById('e_priority').value = p.project_priority;
+    document.getElementById('e_progress').value = p.overall_progress;
+    document.getElementById('e_desc').value     = p.project_description;
+
+    const mc = document.getElementById('e_milestones');
+    mc.innerHTML = '';
+    if (p.milestones) Object.entries(p.milestones).forEach(([label, done]) => addMilestoneField('e_milestones', label, done));
+
+    openModal('editModal');
+  }
+
+  async function submitEdit() {
+    const id = parseInt(document.getElementById('e_id').value);
+
+    const body = {
+      name:        document.getElementById('e_name').value.trim(),
+      author:      document.getElementById('e_author').value.trim(),
+      description: document.getElementById('e_desc').value.trim(),
+      status:      document.getElementById('e_status').value.toUpperCase(),
+      priority:    parseInt(document.getElementById('e_priority').value) || 1,
+      progress:    parseInt(document.getElementById('e_progress').value) || 0,
+      milestones:  getMilestonesFromContainer('e_milestones'),
+    };
+
+    const res = await apiFetch(`/api/modify_project/${id}`, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    });
+    if (!res) return;
+    if (!res.ok) { showToast('Failed to save changes.', 'error'); return; }
+
+    const idx = projects.findIndex(x => x.id === id);
+    if (idx !== -1) {
+      projects[idx] = {
+        ...projects[idx],
+        name:                body.name,
+        project_author_id:   body.author,
+        project_status:      body.status,
+        project_priority:    body.priority,
+        overall_progress:    body.progress,
+        project_description: body.description,
+        milestones:          body.milestones,
+      };
+      projects.sort((a, b) => b.project_priority - a.project_priority);
+    }
+
+    renderProjects();
+    closeModal('editModal');
+    showToast(`"${body.name}" updated.`, 'success');
+  }
+
+  function openDeleteModal(id, name) {
+    document.getElementById('deleteProjectId').value = id;
+    document.getElementById('deleteProjectName').textContent = name;
+    openModal('deleteModal');
+  }
+
+  async function submitDelete() {
+    const id   = parseInt(document.getElementById('deleteProjectId').value);
+    const name = document.getElementById('deleteProjectName').textContent;
+
+    const res = await apiFetch(`/api/delete_project/${id}`, { method: 'DELETE' });
+    if (!res) return;
+    if (!res.ok) { showToast('Failed to delete project.', 'error'); return; }
+
+    projects = projects.filter(x => x.id !== id);
+    renderProjects();
+    closeModal('deleteModal');
+    showToast(`"${name}" deleted.`, 'error');
+  }
+
+  async function handleLogout() {
+    await apiFetch('/api/logout', { method: 'POST' });
+    window.location.href = '/login';
+  }
+
+  function openModal(id) {
+    document.getElementById(id).classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeModal(id) {
+    document.getElementById(id).classList.remove('open');
+    document.body.style.overflow = '';
+  }
+  document.querySelectorAll('.modal-backdrop').forEach(el => {
+    el.addEventListener('click', e => { if (e.target === el) closeModal(el.id); });
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') document.querySelectorAll('.modal-backdrop.open').forEach(el => closeModal(el.id));
+  });
+
+  let toastTimer;
+  function showToast(msg, type = 'success') {
+    const el = document.getElementById('toast');
+    const icon = type === 'success'
+      ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#3fb950" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>'
+      : '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ff5f57" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>';
+    el.innerHTML = icon + `<span>${msg}</span>`;
+    el.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove('show'), 3000);
+  }
+
+  function applyResponsive() {
+    document.querySelectorAll('.card-body-grid').forEach(el => {
+      el.style.gridTemplateColumns = window.innerWidth < 700 ? '1fr' : '1fr 1fr';
+    });
+  }
+  window.addEventListener('resize', applyResponsive);
+
+  loadProjects();
+</script>
+
+</body>
+</html>
