@@ -28,6 +28,14 @@ async def status_code_403(request: Request, exc):
         status_code=403
     )
 
+@app.exception_handler(500)
+async def status_code_500(request: Request, exc):
+    return templates.TemplateResponse(
+        request=request,
+        name="500.html",
+        status_code=500
+    )
+
 
 # Incluir routers
 app.include_router(frontend.router)
