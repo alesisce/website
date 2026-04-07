@@ -42,6 +42,7 @@ class Database:
 
     def create_user(self, name: str, password: str) -> None:
         hashed: bytes = bcrypt.hashpw(password.encode(), bcrypt.gensalt())
+        self.conn.ping(reconnect=True)
         self.cur.execute(
             "INSERT INTO users (name, password) VALUES (%s, %s)",
             (name, hashed.decode())
@@ -49,10 +50,12 @@ class Database:
         self.conn.commit()
 
     def get_user(self, name: str) -> Optional[Dict[str, Any]]:
+        self.conn.ping(reconnect=True)
         self.cur.execute("SELECT * FROM users WHERE name=%s", (name,))
         return self.cur.fetchone()
 
     def verify_user(self, name: str, password: str) -> bool:
+        self.conn.ping(reconnect=True)
         user: Optional[Dict[str, Any]] = self.get_user(name)
         if not user:
             return False
@@ -68,7 +71,7 @@ class Database:
         priority: int,
         milestones: Dict[str, bool]
     ) -> int:
-
+        self.conn.ping(reconnect=True)
         self.cur.execute(
             """INSERT INTO projects
             (name, project_author_id, project_track_id, project_description,
@@ -90,6 +93,7 @@ class Database:
         return self.cur.lastrowid
 
     def delete_project(self, project_id: int) -> bool:
+        self.conn.ping(reconnect=True)
         self.cur.execute(
             "DELETE FROM projects WHERE id=%s",
             (project_id,)
@@ -98,6 +102,7 @@ class Database:
         return self.cur.rowcount > 0
 
     def get_projects(self) -> List[Dict[str, Any]]:
+        self.conn.ping(reconnect=True)
         self.cur.execute(
             "SELECT * FROM projects ORDER BY project_priority ASC"
         )
@@ -111,6 +116,7 @@ class Database:
         return projects
 
     def update_milestones(self, project_id: int, milestones: Dict[str, bool]) -> None:
+        self.conn.ping(reconnect=True)
         self.cur.execute(
             "UPDATE projects SET milestones=%s WHERE id=%s",
             (json.dumps(milestones), project_id)
@@ -118,6 +124,7 @@ class Database:
         self.conn.commit()
 
     def update_progress(self, project_id: int, progress: int) -> None:
+        self.conn.ping(reconnect=True)
         self.cur.execute(
             "UPDATE projects SET overall_progress=%s WHERE id=%s",
             (progress, project_id)
@@ -125,6 +132,7 @@ class Database:
         self.conn.commit()
 
     def update_status(self, project_id: int, status: str) -> None:
+        self.conn.ping(reconnect=True)
         self.cur.execute(
             "UPDATE projects SET project_status=%s WHERE id=%s",
             (status, project_id)
@@ -132,6 +140,7 @@ class Database:
         self.conn.commit()
 
     def update_priority(self, project_id: int, priority: int) -> None:
+        self.conn.ping(reconnect=True)
         self.cur.execute(
             "UPDATE projects SET project_priority=%s WHERE id=%s",
             (priority, project_id)
@@ -139,6 +148,7 @@ class Database:
         self.conn.commit()
 
     def update_description(self, project_id: int, description: str) -> None:
+        self.conn.ping(reconnect=True)
         self.cur.execute(
             "UPDATE projects SET project_description=%s WHERE id=%s",
             (description, project_id)
@@ -146,6 +156,7 @@ class Database:
         self.conn.commit()
 
     def get_project_by_track_id(self, track_id: str) -> Optional[Dict[str, Any]]:
+        self.conn.ping(reconnect=True)
         self.cur.execute(
             "SELECT * FROM projects WHERE project_track_id=%s",
             (track_id,)
@@ -162,6 +173,7 @@ class Database:
         return project
     
     def get_project_by_id(self, project_id: int) -> Optional[Dict[str, Any]]:
+        self.conn.ping(reconnect=True)
         self.cur.execute(
             "SELECT * FROM projects WHERE id=%s",
             (project_id,)
