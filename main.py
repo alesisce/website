@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Request
 from fastapi.templating import Jinja2Templates
+from fastapi.staticfiles import StaticFiles
 from source.config import Config
 from routers import frontend
 from routers import endpoints
@@ -37,9 +38,11 @@ async def status_code_500(request: Request, exc):
     )
 
 
-# Incluir routers
+# Incluir routers y static
 app.include_router(frontend.router)
 app.include_router(endpoints.router)
+
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # Inicializador --------------------------------------------------
 if __name__  == "__main__":
